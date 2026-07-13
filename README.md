@@ -1,6 +1,4 @@
-# Spring Boot + Android Project Template
-
-[//]: # (TODO Update title.  )
+# Graffiti
 
 ## Summary
 
@@ -8,8 +6,6 @@
 
 ## Credits, copyrights, and license information
 
-[//]: # (TODO Include author)
-
-&copy; 2026 by (_author_).
+&copy; 2026 by Jazzmine Scott, Nick Bennett, Chris Hughes.
 
 [//]: # (TODO Add license info)
