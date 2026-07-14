@@ -13,16 +13,16 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package edu.cnm.deepdive.myproject.server;
+package edu.cnm.deepdive.graffiti;
 
-import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@SpringBootTest
-class ServerApplicationTests {
+@SpringBootApplication
+public class GraffitiServerApplication {
 
-  @Test
-  void contextLoads() {
+  public static void main(String[] args) {
+    SpringApplication.run(GraffitiServerApplication.class, args);
   }
 
 }

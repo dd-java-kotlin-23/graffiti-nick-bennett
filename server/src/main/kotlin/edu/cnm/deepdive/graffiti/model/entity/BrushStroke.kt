@@ -1,6 +1,7 @@
 package edu.cnm.deepdive.graffiti.model.entity
 
 import jakarta.persistence.*
+import org.hibernate.Hibernate
 import org.hibernate.annotations.CreationTimestamp
 import java.time.Instant
 
@@ -8,8 +9,8 @@ import java.time.Instant
 class BrushStroke(
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "canvas_id")
-    val id: Long? = null,
+    @Column(name = "brush_stroke_id")
+    var id: Long? = null,
 
     @ManyToOne(optional = false, fetch = FetchType.EAGER)
     @JoinColumn(name = "canvas_id", nullable = false, updatable = false)
@@ -40,14 +41,14 @@ class BrushStroke(
 
     override fun equals(other: Any?): Boolean =
         when {
-            other === null -> false
-            other !is BrushStroke -> false
-            other === this -> true
+            (other === null) -> false
+            (other !is BrushStroke) -> false
+            (other === this) -> true
             else -> (other.id !== null && other.id == this.id)
         }
 
     override fun hashCode(): Int =
-        javaClass.hashCode()
+        Hibernate.getClass(this).hashCode()
 
     override fun toString(): String =
         "BrushStroke(id=$id, canvas=$canvas, contributor=$contributor, color=$color, width=$width, added=$added)"

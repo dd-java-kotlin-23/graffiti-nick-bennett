@@ -1,6 +1,7 @@
 package edu.cnm.deepdive.graffiti.model.entity
 
 import jakarta.persistence.*
+import org.hibernate.Hibernate
 import org.hibernate.annotations.CreationTimestamp
 import java.time.Instant
 import java.util.*
@@ -10,7 +11,7 @@ class Canvas(
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "canvas_id")
-    val id: Long? = null,
+    var id: Long? = null,
 
     @Column(nullable = false, updatable = false, unique = true)
     var externalKey: UUID? = null,
@@ -25,7 +26,7 @@ class Canvas(
     @Column(nullable = false, updatable = false)
     var height: Int,
 
-    @Column(nullable = false, updatable = false, columnDefinition = "DEFAULT -1")
+    @Column(nullable = false, updatable = false, columnDefinition = "integer default -1")
     var backGroundColor: Int = -1,
 
     @CreationTimestamp
@@ -38,15 +39,14 @@ class Canvas(
 ) {
     override fun equals(other: Any?): Boolean =
         when {
-            other === null -> false
-            other !is Canvas -> false
-            other === this -> true
+            (other === null) -> false
+            (other !is Canvas) -> false
+            (other === this) -> true
             else -> (other.id !== null && other.id == this.id)
         }
 
     override fun hashCode(): Int =
-        javaClass.hashCode()
-
+        Hibernate.getClass(this).hashCode()
 
     override fun toString(): String =
         "Canvas(id=$id, externalKey=$externalKey, owner=$owner, width=$width, height=$height, backGroundColor=$backGroundColor, created=$created)"

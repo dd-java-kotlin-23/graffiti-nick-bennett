@@ -1,6 +1,7 @@
 package edu.cnm.deepdive.graffiti.model.entity
 
 import jakarta.persistence.*
+import org.hibernate.Hibernate
 import org.hibernate.annotations.CreationTimestamp
 import java.time.Instant
 import java.util.*
@@ -11,7 +12,7 @@ class User(
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "user_id")
-    val id: Long? = null,
+    var id: Long? = null,
 
     @Column(nullable = false, updatable = false, unique = true)
     var externalKey: UUID? = null,
@@ -29,14 +30,14 @@ class User(
 
     override fun equals(other: Any?): Boolean =
         when {
-            other === null -> false
-            other !is User -> false
-            other === this -> true
+            (other === null) -> false
+            (other !is User) -> false
+            (other === this) -> true
             else -> (other.id !== null && other.id == this.id)
         }
 
     override fun hashCode(): Int =
-        javaClass.hashCode()
+        Hibernate.getClass(this).hashCode()
 
     override fun toString(): String =
         "User(id=$id, externalKey=$externalKey, oauthKey='$oauthKey', displayName='$displayName', created=$created)"
