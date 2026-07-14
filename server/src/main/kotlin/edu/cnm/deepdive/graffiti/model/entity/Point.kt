@@ -1,4 +1,4 @@
-package edu.cnm.deedpive.graffiti.model.entity
+package edu.cnm.deepdive.graffiti.model.entity
 
 import jakarta.persistence.Embeddable
 
