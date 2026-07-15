@@ -4,13 +4,19 @@
 
 - HTTP/HTTPS will be used for requests to the web service, and for the responses.
 
-- Each HTTP request will include an `Authorization` header, containing an Open ID Connect/OAuth 2.0 bearer token.
+- Each HTTP request will include an `Authorization` header, containing an Open ID Connect/OAuth 2.0 bearer token. This token will be obtained via a separate process, not included in this specification (i.e., the web service will be implemented as a resource server application).
 
 - All request/response payloads will use the `application/json` MIME type.
 
-- All UUIDs will be Base64-URL encoded, without padding and without linebreaks. 
+- All UUIDs will be Base64-URL encoded, without padding and without linebreaks. For all UUIDs specified as path parameters, if the Base64-URL representation can't be decoded into a UUID, this will result in a bad request response.
 
 - All timestamps will use RFC 3339 date-time format, with offsets (or `Z` for UTC), rather than time zones.
+
+- At this time, we are planning to use code generation for client proxies to the web service.
+
+- String length constraints are expressed in terms of 16-bit characters; that is, a supplementary-plane character will require 2 16-bit characters.
+
+- All schemas for request bodies are assumed to be closed; additional properties beyond those documented here will result in the request being rejected as a bad request.
 
 - Response status codes
 
@@ -44,7 +50,7 @@ Defines a new canvas, using the authenticated user as the owner, and with specif
 - Path: `/canvases`
 - Request
     - Method: `POST`
-    - Request body
+    - Request body (required)
         - `height`: Integer, required, must be > 0 and <= 1024
         - `width`: Integer, required, must be > 0 and <= 1024
         - `backgroundColor`: Integer (32 bits), optional, with default value `-1`
@@ -92,7 +98,7 @@ Retrieve a list of canvas resources, optionally within a date range.
             - `created`: timestamp
             - `owner`: public user profile (see below)
             - `brushstrokeCount`: integer
-            - `lastBrushStroke`: timestamp
+            - `lastBrushStroke`: timestamp (null, if no brushstrokes have yet been added to the canvas)
 
 ### Delete a canvas
 
@@ -124,6 +130,7 @@ Retrieve a single canvas, with its brushstrokes.
 - Responses
     - Unsuccessful
         - Canvas not found
+        - Invalid `Accept` content type in request
         - Unauthorized
     - Successful
         - Canvas returned with brushstrokes
@@ -135,8 +142,8 @@ Retrieve a single canvas, with its brushstrokes.
             - `key`: Base64 URL-encoded UUID
             - `owner`: public user profile (see below)
             - `brushstrokeCount`: integer
-            - `lastBrushStroke`: timestamp
-            - `brushstrokes`: Array of
+            - `lastBrushStroke`: timestamp (null, if no brushstrokes have yet been added to the canvas)
+            - `brushstrokes`: Array (possibly empty) of
                 - `added`: timestamp
                 - `contributor`: public user profile
                 - `color`: 32-bit integer
@@ -154,7 +161,7 @@ Add a brushstroke, specified in the request body, to a canvas specified in the U
     - Method: `POST`
     - Path parameters
         - `key`: UUID, encoded using Base64 URL encoding
-    - Request body
+    - Request body (required)
       - `color`: 32-bit integer, required
       - `width`: integer, required, must be between 1 and 16 (inclusive)
       - `points`: required, array (ordered) of
@@ -193,6 +200,7 @@ Retrieve a single user profile.
 - Responses
     - Unsuccessful
         - User not found
+        - Invalid `Accept` content type in request
         - Unauthorized
     - Successful
         - User profile returned
@@ -210,6 +218,7 @@ Retrieve the user profile of the requesting user.
 - Responses
     - Unsuccessful
         - Unauthorized
+        - Invalid `Accept` content type in request
     - Successful
         - User profile returned
         - Response body (private user profile)
@@ -226,14 +235,14 @@ Replace properties of the requesting user's profile. (Currently, only the `displ
 - Request
     - Method: `PUT`
     - Request body:
-        - `displayName`: string, length must be between 3 and 50 (inclusive)
+        - `displayName`: string, required, length (after stripping out leading and trailing whitespace) must be between 3 and 50 (inclusive), and string must not contain control characters.
 - Responses
     - Unsuccessful
         - Unauthorized
         - Bad request, if an invalid name is specified
         - Bad `Content-type` in request
         - Bad `Accept` content type in request
-        - Conflict, if specified name conflicts with another user's display name
+        - Conflict, if specified name matches another user's display name (case insensitive)
     - Successful
         - Updated display name returned
         - Response body: private user profile 
