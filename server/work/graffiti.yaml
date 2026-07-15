@@ -3,22 +3,20 @@ info:
   title: Graffiti Web Service API
   version: 0.1.0
   description: >-
-    OpenAPI representation of the currently documented portion of the Graffiti
-    web service functional specification.
-servers:
-  - url: /
-    description: Current host
+    OpenAPI representation of the currently documented Graffiti web service
+    functional specification. The service is an OAuth 2.0/OpenID Connect
+    resource server; token acquisition is outside the scope of this API.
 security:
   - bearerAuth: []
 paths:
   /canvases:
     get:
       summary: List canvases
-      description: >-
-        Retrieves canvases within an optional date range. If omitted, start is
-        30 days before the current date and time, and end is the current date
-        and time. End must be after start.
       operationId: listCanvases
+      description: >-
+        Retrieves canvases within an optional date range. Start defaults to 30
+        days before the current date and time, and end defaults to the current
+        date and time. End must be after start.
       parameters:
         - $ref: '#/components/parameters/Start'
         - $ref: '#/components/parameters/End'
@@ -39,8 +37,8 @@ paths:
           $ref: '#/components/responses/NotAcceptable'
     post:
       summary: Create a canvas
-      description: Creates a canvas owned by the authenticated user.
       operationId: createCanvas
+      description: Creates a canvas owned by the authenticated user.
       requestBody:
         required: true
         content:
@@ -52,8 +50,8 @@ paths:
           description: Canvas created.
           headers:
             Location:
-              description: URI of the created canvas.
               required: true
+              description: URI of the created canvas.
               schema:
                 type: string
                 format: uri-reference
@@ -70,34 +68,157 @@ paths:
         '415':
           $ref: '#/components/responses/UnsupportedMediaType'
   /canvases/{key}:
+    parameters:
+      - $ref: '#/components/parameters/CanvasKey'
+    get:
+      summary: Get a canvas
+      operationId: getCanvas
+      description: Retrieves a canvas with its brushstrokes.
+      responses:
+        '200':
+          description: Canvas returned with its brushstrokes.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CanvasDetail'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/CanvasNotFound'
+        '406':
+          $ref: '#/components/responses/NotAcceptable'
     delete:
       summary: Delete a canvas
-      description: Deletes a canvas owned by the authenticated user.
       operationId: deleteCanvas
-      parameters:
-        - $ref: '#/components/parameters/CanvasKey'
+      description: >-
+        Deletes a canvas owned by the authenticated user. Any request body and
+        Content-Type header are ignored. The Accept header is also ignored.
       responses:
         '204':
           description: Canvas deleted. No response body is returned.
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/CanvasNotFound'
+  /canvases/{key}/strokes:
+    post:
+      summary: Add a brushstroke
+      operationId: addBrushstroke
+      description: Adds a brushstroke to the specified canvas.
+      parameters:
+        - $ref: '#/components/parameters/CanvasKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BrushstrokeCreate'
+      responses:
+        '200':
+          description: >-
+            Brushstroke added and returned. No Location header is returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Brushstroke'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/CanvasNotFound'
+        '406':
+          $ref: '#/components/responses/NotAcceptable'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+  /users/me:
+    get:
+      summary: Get my user profile
+      operationId: getMyUserProfile
+      description: Retrieves the authenticated user's private profile.
+      responses:
+        '200':
+          description: Private user profile returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrivateUserProfile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '406':
+          $ref: '#/components/responses/NotAcceptable'
+    put:
+      summary: Update my user profile
+      operationId: updateMyUserProfile
+      description: >-
+        Replaces mutable properties of the authenticated user's profile.
+        Currently, only displayName can be changed.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserProfileUpdate'
+      responses:
+        '200':
+          description: User profile updated and returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrivateUserProfile'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '406':
+          $ref: '#/components/responses/NotAcceptable'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+  /users/{key}:
+    get:
+      summary: Get a user profile
+      operationId: getUserProfile
+      description: Retrieves a public user profile.
+      parameters:
+        - $ref: '#/components/parameters/UserKey'
+      responses:
+        '200':
+          description: Public user profile returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicUserProfile'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/UserNotFound'
+        '406':
+          $ref: '#/components/responses/NotAcceptable'
 components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: OIDC/OAuth 2.0 access token
+      description: >-
+        Bearer token obtained through a process outside this API specification.
   parameters:
     Start:
       name: start
       in: query
       required: false
       description: >-
-        Start of the date range. Defaults to 30 days before the current date
+        RFC 3339 start timestamp. Defaults to 30 days before the current date
         and time.
       schema:
         type: string
@@ -107,7 +228,7 @@ components:
       in: query
       required: false
       description: >-
-        End of the date range. Defaults to the current date and time and must
+        RFC 3339 end timestamp. Defaults to the current date and time and must
         be after start.
       schema:
         type: string
@@ -116,13 +237,33 @@ components:
       name: key
       in: path
       required: true
-      description: UUID encoded using unpadded Base64 URL encoding.
+      description: >-
+        UUID encoded as unpadded, single-line Base64URL. Values that cannot be
+        decoded into a UUID produce a 400 response.
       schema:
-        type: string
-        pattern: '^[A-Za-z0-9_-]{22}$'
-        examples:
-          - AAECAwQFBgcICQoLDA0ODw
+        $ref: '#/components/schemas/EncodedUuid'
+    UserKey:
+      name: key
+      in: path
+      required: true
+      description: >-
+        UUID encoded as unpadded, single-line Base64URL. Values that cannot be
+        decoded into a UUID produce a 400 response.
+      schema:
+        $ref: '#/components/schemas/EncodedUuid'
   schemas:
+    EncodedUuid:
+      type: string
+      description: UUID encoded as unpadded, single-line Base64URL.
+      pattern: '^[A-Za-z0-9_-]{22}$'
+      examples:
+        - AAECAwQFBgcICQoLDA0ODw
+    Timestamp:
+      type: string
+      format: date-time
+      description: >-
+        RFC 3339 date-time with a numeric offset or Z, rather than a named time
+        zone.
     CanvasCreate:
       type: object
       additionalProperties: false
@@ -148,6 +289,7 @@ components:
         - height
         - width
         - backgroundColor
+        - key
         - created
         - owner
       properties:
@@ -158,11 +300,12 @@ components:
         backgroundColor:
           type: integer
           format: int32
+        key:
+          $ref: '#/components/schemas/EncodedUuid'
         created:
-          type: string
-          format: date-time
+          $ref: '#/components/schemas/Timestamp'
         owner:
-          $ref: '#/components/schemas/UserProfile'
+          $ref: '#/components/schemas/PublicUserProfile'
     CanvasSummary:
       allOf:
         - $ref: '#/components/schemas/Canvas'
@@ -175,14 +318,121 @@ components:
               type: integer
               minimum: 0
             lastBrushStroke:
-              type: string
-              format: date-time
-    UserProfile:
+              description: Null if the canvas has no brushstrokes.
+              oneOf:
+                - $ref: '#/components/schemas/Timestamp'
+                - type: 'null'
+    CanvasDetail:
+      allOf:
+        - $ref: '#/components/schemas/CanvasSummary'
+        - type: object
+          required:
+            - brushstrokes
+          properties:
+            brushstrokes:
+              type: array
+              items:
+                $ref: '#/components/schemas/Brushstroke'
+    BrushstrokeCreate:
       type: object
-      description: >-
-        User profile associated with a canvas. Its properties have not yet
-        been defined in the functional specification.
-      additionalProperties: true
+      additionalProperties: false
+      required:
+        - color
+        - width
+        - points
+      properties:
+        color:
+          type: integer
+          format: int32
+        width:
+          type: integer
+          minimum: 1
+          maximum: 16
+        points:
+          type: array
+          minItems: 2
+          description: Points in drawing order, relative to the canvas.
+          items:
+            $ref: '#/components/schemas/Point'
+    Brushstroke:
+      type: object
+      required:
+        - added
+        - contributor
+        - color
+        - width
+        - points
+      properties:
+        added:
+          $ref: '#/components/schemas/Timestamp'
+        contributor:
+          $ref: '#/components/schemas/PublicUserProfile'
+        color:
+          type: integer
+          format: int32
+        width:
+          type: integer
+        points:
+          type: array
+          items:
+            $ref: '#/components/schemas/Point'
+    Point:
+      type: object
+      additionalProperties: false
+      required:
+        - x
+        - y
+      properties:
+        x:
+          type: number
+          format: float
+          minimum: 0
+          exclusiveMaximum: 1024
+        y:
+          type: number
+          format: float
+          minimum: 0
+          exclusiveMaximum: 1024
+    PublicUserProfile:
+      type: object
+      required:
+        - key
+        - displayName
+      properties:
+        key:
+          $ref: '#/components/schemas/EncodedUuid'
+        displayName:
+          type: string
+    PrivateUserProfile:
+      allOf:
+        - $ref: '#/components/schemas/PublicUserProfile'
+        - type: object
+          required:
+            - created
+            - ownedCanvases
+          properties:
+            created:
+              $ref: '#/components/schemas/Timestamp'
+            ownedCanvases:
+              type: integer
+              minimum: 0
+    UserProfileUpdate:
+      type: object
+      additionalProperties: false
+      required:
+        - displayName
+      properties:
+        displayName:
+          type: string
+          x-minLength: 3
+          x-maxLength: 50
+          x-lengthUnit: utf-16-code-unit
+          x-trimBeforeValidation: true
+          description: >-
+            Must contain no control characters. Length is measured after
+            stripping leading and trailing whitespace and in UTF-16 code units;
+            supplementary-plane characters count as two. Must not match another
+            user's display name, case-insensitively.
     Error:
       type: object
       required:
@@ -192,8 +442,7 @@ components:
         - path
       properties:
         timestamp:
-          type: string
-          format: date-time
+          $ref: '#/components/schemas/Timestamp'
         status:
           type: integer
         error:
@@ -221,14 +470,30 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
-    NotFound:
+    CanvasNotFound:
       description: The specified canvas was not found.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
+    UserNotFound:
+      description: The specified user was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
     NotAcceptable:
-      description: The requested Accept media type is not application/json.
+      description: >-
+        The requested Accept media type is not application/json. No response
+        body is returned.
+    Conflict:
+      description: >-
+        The requested display name matches another user's display name,
+        case-insensitively.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
     UnsupportedMediaType:
       description: The request body media type is not application/json.
       content:
