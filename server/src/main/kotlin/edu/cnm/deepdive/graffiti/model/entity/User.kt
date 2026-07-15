@@ -4,6 +4,7 @@ import jakarta.persistence.*
 import org.hibernate.annotations.CreationTimestamp
 import java.time.Instant
 import java.util.*
+import org.hibernate.Hibernate
 
 @Entity
 @Table(name = "user_profile")
@@ -11,7 +12,7 @@ class User(
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "user_id")
-    val id: Long? = null,
+    var id: Long? = null,
 
     @Column(nullable = false, updatable = false, unique = true)
     var externalKey: UUID? = null,
@@ -36,7 +37,7 @@ class User(
         }
 
     override fun hashCode(): Int =
-        javaClass.hashCode()
+        Hibernate.getClass(this).hashCode()
 
     override fun toString(): String =
         "User(id=$id, externalKey=$externalKey, oauthKey='$oauthKey', displayName='$displayName', created=$created)"
