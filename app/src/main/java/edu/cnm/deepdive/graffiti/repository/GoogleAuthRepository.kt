@@ -74,8 +74,9 @@ internal class GoogleAuthRepository @Inject constructor(
 
     private fun GoogleIdTokenCredential.toAuthCredential(): AuthCredential =
         AuthCredential(
-            idToken = idToken,
-            subject = tokenParser.extractSubject(idToken),
+            idToken,
+            tokenParser.extractSubject(idToken),
+            tokenParser.extractDisplayName(idToken),
         )
 
 }

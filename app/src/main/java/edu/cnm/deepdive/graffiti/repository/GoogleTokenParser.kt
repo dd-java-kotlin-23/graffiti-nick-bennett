@@ -6,7 +6,7 @@ import jakarta.inject.Singleton
 import org.json.JSONObject
 
 @Singleton
-class GoogleTokenParser @Inject constructor() : TokenParser {
+internal class GoogleTokenParser @Inject constructor() : TokenParser {
 
     override fun extractSubject(token: String): String {
         val payload = token.split(".")[1]
@@ -28,4 +28,11 @@ class GoogleTokenParser @Inject constructor() : TokenParser {
             true
         }
     }
+
+    override fun extractDisplayName(token: String): String {
+        val payload = token.split(".")[1]
+        val decodedPayload = String(Base64.decode(payload, Base64.URL_SAFE or Base64.NO_WRAP))
+        return JSONObject(decodedPayload).getString("name")
+    }
+
 }

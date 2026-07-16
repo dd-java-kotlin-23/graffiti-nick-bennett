@@ -6,4 +6,6 @@ interface TokenParser {
 
     fun isExpired(token: String): Boolean
 
+    fun extractDisplayName(token: String): String
+
 }
