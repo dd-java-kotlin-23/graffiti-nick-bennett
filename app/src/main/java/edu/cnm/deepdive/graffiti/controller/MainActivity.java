@@ -10,6 +10,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.navigation.NavController;
+import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 import dagger.hilt.android.AndroidEntryPoint;
@@ -36,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
       v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
       return insets;
     });
+    setupNavigation();
   }
 
   @Override
@@ -57,6 +59,13 @@ public class MainActivity extends AppCompatActivity {
   @Override
   public boolean onSupportNavigateUp() {
     return NavigationUI.navigateUp(navController, appBarConfig) || super.onSupportNavigateUp();
+  }
+
+  private void setupNavigation() {
+    appBarConfig = new AppBarConfiguration.Builder(R.id.login_fragment, R.id.main_fragment).build();
+    NavHostFragment host = binding.navHostFragment.getFragment();
+    navController = host.getNavController();
+    NavigationUI.setupActionBarWithNavController(this, navController, appBarConfig);
   }
 
 }

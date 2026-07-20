@@ -11,6 +11,7 @@ import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.ViewModelProvider;
 import com.google.android.material.snackbar.Snackbar;
 import dagger.hilt.android.AndroidEntryPoint;
+import edu.cnm.deepdive.graffiti.R;
 import edu.cnm.deepdive.graffiti.databinding.FragmentLoginBinding;
 import edu.cnm.deepdive.graffiti.viewmodel.UserViewModel;
 
@@ -47,14 +48,15 @@ public class LoginFragment extends Fragment {
           if (error != null) {
             binding.signIn.setEnabled(true);
             binding.signIn.setVisibility(View.VISIBLE);
-            Snackbar.make().show();
+            Snackbar.make(binding.getRoot(), R.string.sign_in_failure_message, Snackbar.LENGTH_LONG).show();
           }
         });
+    viewModel.signIn(requireActivity());
   }
 
   @Override
   public void onDestroyView() {
-    // TODO: 7/20/26 Release references to UI views by setting binding reference to null.
+    binding = null;
     super.onDestroyView();
   }
 
