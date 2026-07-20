@@ -8,6 +8,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.Navigation;
 import com.google.android.material.snackbar.Snackbar;
 import dagger.hilt.android.AndroidEntryPoint;
 import edu.cnm.deepdive.graffiti.R;
@@ -52,7 +53,7 @@ public class LoginFragment extends Fragment {
         ? View.GONE : View.VISIBLE);
     binding.signIn.setEnabled(!busy);
     if (state.getStatus() == SignInState.Status.SIGNED_IN) {
-      // TODO: Navigate to the main fragment.
+      Navigation.findNavController(binding.getRoot()).navigate(LoginFragmentDirections.showMainFragment());
     } else if (state.getStatus() == SignInState.Status.ERROR) {
       Snackbar.make(binding.getRoot(), R.string.sign_in_failure_message, Snackbar.LENGTH_LONG)
           .show();
