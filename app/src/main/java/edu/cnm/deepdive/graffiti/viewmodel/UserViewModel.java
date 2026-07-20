@@ -2,6 +2,7 @@ package edu.cnm.deepdive.graffiti.viewmodel;
 
 import android.app.Activity;
 import android.util.Log;
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 import dagger.hilt.android.lifecycle.HiltViewModel;
@@ -21,6 +22,14 @@ public class UserViewModel extends ViewModel {
   @Inject
   UserViewModel(UserService userService) {
     this.userService = userService;
+  }
+
+  public LiveData<User> getUser() {
+    return user;
+  }
+
+  public LiveData<Throwable> getError() {
+    return error;
   }
 
   public void signIn(Activity activity) {
