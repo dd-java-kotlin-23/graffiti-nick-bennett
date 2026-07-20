@@ -6,7 +6,9 @@ import java.util.concurrent.CompletableFuture
 
 interface UserService {
 
-    fun signIn(activity: Activity): CompletableFuture<User>
+    fun signInAutomatically(activity: Activity): CompletableFuture<User>
+
+    fun signInInteractively(activity: Activity): CompletableFuture<User>
 
     fun signOut(): CompletableFuture<Void?>
 

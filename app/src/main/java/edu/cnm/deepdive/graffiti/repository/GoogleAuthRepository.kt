@@ -4,9 +4,12 @@ import android.app.Activity
 import android.content.Context
 import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
+import androidx.credentials.CredentialOption
 import androidx.credentials.CustomCredential
-import androidx.credentials.GetCredentialRequest
+import androidx.credentials.GetCredentialRequest.Builder
+import androidx.credentials.GetCredentialResponse
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import dagger.hilt.android.qualifiers.ApplicationContext
 import edu.cnm.deepdive.graffiti.R
@@ -23,53 +26,50 @@ internal class GoogleAuthRepository @Inject constructor(
     private val clientId: String = context.getString(R.string.client_id)
     private val credentialManager = CredentialManager.create(context)
 
-    override suspend fun signInQuickly(activity: Activity): AuthCredential =
-        attemptSignIn(activity, filter = true, autoSelect = false)
+    override suspend fun signInAutomatically(activity: Activity): AuthCredential =
+        getCredential(activity, buildGoogleIdOption(filter = true, autoSelect = true))
 
-    override suspend fun signIn(activity: Activity): AuthCredential {
-        return attemptSignIn(activity, filter = false, autoSelect = false)
-    }
+    override suspend fun signInInteractively(activity: Activity): AuthCredential =
+        getCredential(activity, GetSignInWithGoogleOption.Builder(clientId).build())
 
     override suspend fun refreshToken(
         activity: Activity,
         credential: AuthCredential
-    ): AuthCredential {
-        return if (!tokenParser.isExpired(credential.idToken)) {
+    ): AuthCredential =
+        if (!tokenParser.isExpired(credential.idToken)) {
             credential
         } else {
-            attemptSignIn(activity, filter = true, autoSelect = true)
+            getCredential(activity, buildGoogleIdOption(filter = true, autoSelect = true))
         }
-    }
 
-    override suspend fun signOut() {
+    override suspend fun signOut() =
         credentialManager.clearCredentialState(ClearCredentialStateRequest())
+
+    private suspend fun getCredential(
+        activity: Activity,
+        option: CredentialOption
+    ): AuthCredential {
+        val request = Builder()
+            .addCredentialOption(option)
+            .build()
+        return parseCredential(credentialManager.getCredential(activity, request))
     }
 
-    private suspend fun attemptSignIn(
-        activity: Activity,
-        filter: Boolean,
-        autoSelect: Boolean,
-    ): AuthCredential {
-        val googleIdOption = GetGoogleIdOption.Builder()
+    private fun buildGoogleIdOption(filter: Boolean, autoSelect: Boolean): GetGoogleIdOption =
+        GetGoogleIdOption.Builder()
             .setFilterByAuthorizedAccounts(filter)
             .setAutoSelectEnabled(autoSelect)
             .setServerClientId(clientId)
             .build()
-        val request = GetCredentialRequest.Builder()
-            .addCredentialOption(googleIdOption)
-            .build()
-        return try {
-            val result = credentialManager.getCredential(activity, request)
-            if (result.credential is CustomCredential
-                && result.credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
-            ) {
-                GoogleIdTokenCredential.createFrom(result.credential.data).toAuthCredential()
-            } else {
-                throw IllegalStateException("Credential is not a Google ID token credential.")
-            }
-        } catch (e: Exception) {
-            throw AuthRepository.SignInRequiredException("Sign-in required.", e)
+
+    private fun parseCredential(result: GetCredentialResponse): AuthCredential {
+        val credential = result.credential
+        if (credential is CustomCredential
+            && credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+        ) {
+            return GoogleIdTokenCredential.createFrom(credential.data).toAuthCredential()
         }
+        throw IllegalStateException("Credential is not a Google ID token credential.")
     }
 
     private fun GoogleIdTokenCredential.toAuthCredential(): AuthCredential =

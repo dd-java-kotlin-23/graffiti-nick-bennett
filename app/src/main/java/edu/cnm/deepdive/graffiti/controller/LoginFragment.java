@@ -26,7 +26,7 @@ public class LoginFragment extends Fragment {
   public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
       @Nullable Bundle savedInstanceState) {
     binding = FragmentLoginBinding.inflate(inflater, container, false);
-    binding.signIn.setOnClickListener((_) -> viewModel.signIn(requireActivity()));
+    binding.signIn.setOnClickListener((_) -> viewModel.signInAutomatically(requireActivity()));
     return binding.getRoot();
   }
 
@@ -51,7 +51,7 @@ public class LoginFragment extends Fragment {
             Snackbar.make(binding.getRoot(), R.string.sign_in_failure_message, Snackbar.LENGTH_LONG).show();
           }
         });
-    viewModel.signIn(requireActivity());
+    viewModel.signInAutomatically(requireActivity());
   }
 
   @Override

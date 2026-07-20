@@ -18,9 +18,14 @@ internal class UserServiceImpl @Inject constructor(
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    override fun signIn(activity: Activity): CompletableFuture<User> =
+    override fun signInAutomatically(activity: Activity): CompletableFuture<User> =
         scope.future {
-            sessionManager.signIn(activity)
+            sessionManager.signInAutomatically(activity)
+        }
+
+    override fun signInInteractively(activity: Activity): CompletableFuture<User> =
+        scope.future {
+            sessionManager.signInInteractively(activity)
         }
 
     override fun signOut(): CompletableFuture<Void?> =

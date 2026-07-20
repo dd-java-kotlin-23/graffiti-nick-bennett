@@ -8,7 +8,9 @@ interface SessionManager {
 
     val state: StateFlow<SessionState>
 
-    suspend fun signIn(activity: Activity): User
+    suspend fun signInAutomatically(activity: Activity): User
+
+    suspend fun signInInteractively(activity: Activity): User
 
     fun getCurrentUser(): User?
 
