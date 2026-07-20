@@ -5,6 +5,12 @@
   android:id="@+id/nav_graph"
   app:startDestination="@id/login_fragment">
 
+  <action
+    android:id="@+id/show_login_fragment"
+    app:destination="@id/login_fragment"
+    app:popUpTo="@id/nav_graph"
+    app:popUpToInclusive="true"/>
+
   <fragment
     android:id="@+id/login_fragment"
     android:name="edu.cnm.deepdive.graffiti.controller.LoginFragment"
@@ -13,7 +19,9 @@
 
     <action
       android:id="@+id/show_main_fragment"
-      app:destination="@id/main_fragment"/>
+      app:destination="@id/main_fragment"
+      app:popUpTo="@id/nav_graph"
+      app:popUpToInclusive="true"/>
 
   </fragment>
 

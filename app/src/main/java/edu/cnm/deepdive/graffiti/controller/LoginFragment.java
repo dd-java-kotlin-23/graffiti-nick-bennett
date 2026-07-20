@@ -9,10 +9,13 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.Navigation;
 import com.google.android.material.snackbar.Snackbar;
 import dagger.hilt.android.AndroidEntryPoint;
 import edu.cnm.deepdive.graffiti.R;
 import edu.cnm.deepdive.graffiti.databinding.FragmentLoginBinding;
+import edu.cnm.deepdive.graffiti.viewmodel.SignInState;
+import edu.cnm.deepdive.graffiti.viewmodel.SignInState.Status;
 import edu.cnm.deepdive.graffiti.viewmodel.UserViewModel;
 
 @AndroidEntryPoint
@@ -26,7 +29,7 @@ public class LoginFragment extends Fragment {
   public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
       @Nullable Bundle savedInstanceState) {
     binding = FragmentLoginBinding.inflate(inflater, container, false);
-    binding.signIn.setOnClickListener((_) -> viewModel.signInAutomatically(requireActivity()));
+    binding.signIn.setOnClickListener((_) -> viewModel.signInInteractively(requireActivity()));
     return binding.getRoot();
   }
 
@@ -35,22 +38,7 @@ public class LoginFragment extends Fragment {
     super.onViewCreated(view, savedInstanceState);
     viewModel = new ViewModelProvider(requireActivity()).get(UserViewModel.class);
     LifecycleOwner owner = getViewLifecycleOwner();
-    viewModel
-        .getUser()
-        .observe(owner, (user) -> {
-          if (user != null) {
-            // TODO: 7/20/26 Navigate to main fragment.
-          }
-        });
-    viewModel
-        .getError()
-        .observe(owner, (error) -> {
-          if (error != null) {
-            binding.signIn.setEnabled(true);
-            binding.signIn.setVisibility(View.VISIBLE);
-            Snackbar.make(binding.getRoot(), R.string.sign_in_failure_message, Snackbar.LENGTH_LONG).show();
-          }
-        });
+    viewModel.getState().observe(owner, this::handleState);
     viewModel.signInAutomatically(requireActivity());
   }
 
@@ -58,6 +46,25 @@ public class LoginFragment extends Fragment {
   public void onDestroyView() {
     binding = null;
     super.onDestroyView();
+  }
+
+  private void handleState(SignInState state) {
+    boolean busy = (state.status() == Status.CHECKING_SESSION)
+        || (state.status() == Status.SIGNING_IN);
+    binding.waitingIndicator.setVisibility(busy ? View.VISIBLE : View.GONE);
+    binding.signIn.setVisibility(
+        (busy || state.status() == Status.SIGNED_IN)
+            ? View.GONE
+            : View.VISIBLE
+    );
+    binding.signIn.setEnabled(!busy);
+    if (state.status() == Status.SIGNED_IN) {
+      Navigation.findNavController(binding.getRoot())
+          .navigate(edu.cnm.deepdive.graffiti.controller.LoginFragmentDirections.showMainFragment());
+    } else if (state.status() == Status.ERROR) {
+      Snackbar.make(binding.getRoot(), R.string.sign_in_failure_message, Snackbar.LENGTH_LONG)
+          .show();
+    }
   }
 
 }
