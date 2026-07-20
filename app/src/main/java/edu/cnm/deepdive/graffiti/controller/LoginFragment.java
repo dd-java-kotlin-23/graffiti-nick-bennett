@@ -7,12 +7,12 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.ViewModelProvider;
 import com.google.android.material.snackbar.Snackbar;
 import dagger.hilt.android.AndroidEntryPoint;
 import edu.cnm.deepdive.graffiti.R;
 import edu.cnm.deepdive.graffiti.databinding.FragmentLoginBinding;
+import edu.cnm.deepdive.graffiti.viewmodel.SignInState;
 import edu.cnm.deepdive.graffiti.viewmodel.UserViewModel;
 
 @AndroidEntryPoint
@@ -26,7 +26,7 @@ public class LoginFragment extends Fragment {
   public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
       @Nullable Bundle savedInstanceState) {
     binding = FragmentLoginBinding.inflate(inflater, container, false);
-    binding.signIn.setOnClickListener((_) -> viewModel.signIn(requireActivity()));
+    binding.signIn.setOnClickListener((_) -> viewModel.signInInteractively(requireActivity()));
     return binding.getRoot();
   }
 
@@ -34,30 +34,29 @@ public class LoginFragment extends Fragment {
   public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
     super.onViewCreated(view, savedInstanceState);
     viewModel = new ViewModelProvider(requireActivity()).get(UserViewModel.class);
-    LifecycleOwner owner = getViewLifecycleOwner();
-    viewModel
-        .getUser()
-        .observe(owner, (user) -> {
-          if (user != null) {
-            // TODO: 7/20/26 Navigate to main fragment.
-          }
-        });
-    viewModel
-        .getError()
-        .observe(owner, (error) -> {
-          if (error != null) {
-            binding.signIn.setEnabled(true);
-            binding.signIn.setVisibility(View.VISIBLE);
-            Snackbar.make(binding.getRoot(), R.string.sign_in_failure_message, Snackbar.LENGTH_LONG).show();
-          }
-        });
-    viewModel.signIn(requireActivity());
+    viewModel.getState().observe(getViewLifecycleOwner(), this::render);
+    viewModel.signInAutomatically(requireActivity());
   }
 
   @Override
   public void onDestroyView() {
     binding = null;
     super.onDestroyView();
+  }
+
+  private void render(@NonNull SignInState state) {
+    boolean busy = state.getStatus() == SignInState.Status.CHECKING_SESSION
+        || state.getStatus() == SignInState.Status.SIGNING_IN;
+    binding.progress.setVisibility(busy ? View.VISIBLE : View.GONE);
+    binding.signIn.setVisibility(busy || state.getStatus() == SignInState.Status.SIGNED_IN
+        ? View.GONE : View.VISIBLE);
+    binding.signIn.setEnabled(!busy);
+    if (state.getStatus() == SignInState.Status.SIGNED_IN) {
+      // TODO: Navigate to the main fragment.
+    } else if (state.getStatus() == SignInState.Status.ERROR) {
+      Snackbar.make(binding.getRoot(), R.string.sign_in_failure_message, Snackbar.LENGTH_LONG)
+          .show();
+    }
   }
 
 }

@@ -5,15 +5,12 @@ import edu.cnm.deepdive.graffiti.model.auth.AuthCredential
 
 interface AuthRepository {
 
-    suspend fun signInQuickly(activity: Activity): AuthCredential
+    suspend fun signInAutomatically(activity: Activity): AuthCredential
 
-    suspend fun signIn(activity: Activity): AuthCredential
+    suspend fun signInInteractively(activity: Activity): AuthCredential
 
     suspend fun refreshToken(activity: Activity, credential: AuthCredential): AuthCredential
 
     suspend fun signOut()
-
-    class SignInRequiredException(message: String, cause: Throwable) :
-        RuntimeException(message, cause)
 
 }
