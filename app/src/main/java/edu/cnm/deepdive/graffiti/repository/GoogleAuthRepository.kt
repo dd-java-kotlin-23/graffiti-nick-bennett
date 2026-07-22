@@ -2,6 +2,7 @@ package edu.cnm.deepdive.graffiti.repository
 
 import android.app.Activity
 import android.content.Context
+import android.util.Log
 import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
 import androidx.credentials.CredentialOption
@@ -67,7 +68,11 @@ internal class GoogleAuthRepository @Inject constructor(
         if (credential is CustomCredential
             && credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
         ) {
-            return GoogleIdTokenCredential.createFrom(credential.data).toAuthCredential()
+            return GoogleIdTokenCredential.createFrom(credential.data)
+                .toAuthCredential()
+                .also { // FIXME: Get rid of this scope function when we don't need to log the token!!!!
+                    Log.d(GoogleAuthRepository::class.java.simpleName, "Bearer ${it.idToken}")
+                }
         }
         throw IllegalStateException("Credential is not a Google ID token credential.")
     }
