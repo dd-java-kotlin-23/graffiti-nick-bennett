@@ -1,6 +1,7 @@
 package edu.cnm.deepdive.graffiti.service
 
 import edu.cnm.deepdive.graffiti.model.entity.User
+import java.util.UUID
 
 interface UserService {
 
@@ -8,10 +9,10 @@ interface UserService {
 
     val allUsers: List<User>
 
-    fun getUser(externalId: String)
+    fun getUser(externalId: UUID): User
 
-    fun getOrAddUser(oauthKey: String, user: User)
+    fun getOrAddUser(user: User): User
 
-    fun updateMe(changes: User)
+    fun updateMe(changes: User): User
 
 }
