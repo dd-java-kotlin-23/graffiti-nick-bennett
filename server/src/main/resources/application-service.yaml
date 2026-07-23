@@ -1,0 +1,9 @@
+server:
+  forward-headers-strategy: framework
+  port: 18081
+  servlet:
+    context-path: /graffiti
+
+spring:
+  application:
+    name: service

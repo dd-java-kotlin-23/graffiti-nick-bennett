@@ -48,6 +48,9 @@ dependencies {
     implementation(libs.spring.boot.starter.validation)
     implementation(libs.spring.boot.starter.actuator)
     implementation(libs.spring.boot.starter.data.jpa)
+    implementation(libs.spring.boot.starter.security)
+    implementation(libs.spring.boot.oauth2.resource.server)
+//    testImplementation("org.springframework.security:spring-security-test")
 
     developmentOnly(libs.spring.boot.devtools)
 
