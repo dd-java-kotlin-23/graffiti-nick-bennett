@@ -1,0 +1,4 @@
+interface:
+  display_name: "Create Session Snapshot"
+  short_description: "Save portable work context safely"
+  default_prompt: "Use $create-session-snapshot to create and commit an agent-neutral snapshot of this work session."
