@@ -30,21 +30,6 @@ plugins {
 group = project.property("basePackageName") as String
 version = project.property("version") as String
 
-fun requiredProjectProperty(name: String): String =
-    requireNotNull(project.findProperty(name)) {
-        "Required Gradle project property '$name' is not defined."
-    }.toString()
-
-fun booleanProjectProperty(name: String): Boolean =
-    requiredProjectProperty(name).toBooleanStrict()
-
-fun indexedProjectProperties(indexName: String, prefix: String): Map<String, String> =
-    requiredProjectProperty(indexName)
-        .split(',')
-        .map(String::trim)
-        .filter(String::isNotEmpty)
-        .associateWith { requiredProjectProperty("$prefix$it") }
-
 val openApiInputSpec = requiredProjectProperty("openApi.inputSpec")
 val openApiOutputDirectory = requiredProjectProperty("openApi.outputDirectory")
 val openApiSourceFolder = requiredProjectProperty("openApi.sourceFolder")
@@ -134,3 +119,19 @@ val generateGraffitiApi = tasks.register<GenerateTask>("generateGraffitiApi") {
 tasks.named("compileKotlin") {
     dependsOn(generateGraffitiApi)
 }
+
+fun requiredProjectProperty(name: String): String =
+    requireNotNull(project.findProperty(name)) {
+        "Required Gradle project property '$name' is not defined."
+    }.toString()
+
+fun booleanProjectProperty(name: String): Boolean =
+    requiredProjectProperty(name).toBooleanStrict()
+
+fun indexedProjectProperties(indexName: String, prefix: String): Map<String, String> =
+    requiredProjectProperty(indexName)
+        .split(',')
+        .map(String::trim)
+        .filter(String::isNotEmpty)
+        .associateWith { requiredProjectProperty("$prefix$it") }
+
