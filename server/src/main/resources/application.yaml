@@ -1,6 +1,6 @@
 spring:
   application:
-    name: ${rootProjectName}-server
+    name: graffiti-server
 
   profiles:
     active:
