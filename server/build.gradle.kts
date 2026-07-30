@@ -14,6 +14,8 @@
  *  limitations under the License.
  */
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
+import org.openapitools.generator.gradle.plugin.tasks.ValidateTask
 
 plugins {
     java
@@ -22,10 +24,39 @@ plugins {
     alias(libs.plugins.kotlin.jpa)
     alias(libs.plugins.spring.boot)
     alias(libs.plugins.spring.dependency)
+    alias(libs.plugins.openapi)
 }
 
 group = project.property("basePackageName") as String
 version = project.property("version") as String
+
+fun requiredProjectProperty(name: String): String =
+    requireNotNull(project.findProperty(name)) {
+        "Required Gradle project property '$name' is not defined."
+    }.toString()
+
+fun booleanProjectProperty(name: String): Boolean =
+    requiredProjectProperty(name).toBooleanStrict()
+
+fun indexedProjectProperties(indexName: String, prefix: String): Map<String, String> =
+    requiredProjectProperty(indexName)
+        .split(',')
+        .map(String::trim)
+        .filter(String::isNotEmpty)
+        .associateWith { requiredProjectProperty("$prefix$it") }
+
+val openApiInputSpec = requiredProjectProperty("openApi.inputSpec")
+val openApiOutputDirectory = requiredProjectProperty("openApi.outputDirectory")
+val openApiSourceFolder = requiredProjectProperty("openApi.sourceFolder")
+val openApiConfigPrefix = "openApi.config."
+val openApiGlobalPrefix = "openApi.global."
+val openApiConfigOptions =
+    indexedProjectProperties("openApi.configOptions", openApiConfigPrefix)
+        .plus("sourceFolder" to openApiSourceFolder)
+val openApiGlobalProperties =
+    indexedProjectProperties("openApi.globalProperties", openApiGlobalPrefix)
+val generatedOpenApiRoot = layout.buildDirectory.dir(openApiOutputDirectory)
+val generatedOpenApiKotlin = generatedOpenApiRoot.map { it.dir(openApiSourceFolder) }
 
 java {
     toolchain {
@@ -36,6 +67,11 @@ java {
 kotlin {
     compilerOptions {
         jvmTarget = JvmTarget.valueOf("JVM_${libs.versions.java.get()}")
+    }
+    sourceSets {
+        named("main") {
+            kotlin.srcDir(generatedOpenApiKotlin)
+        }
     }
 }
 
@@ -63,4 +99,38 @@ dependencies {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+
+val validateGraffitiApi = tasks.register<ValidateTask>("validateGraffitiApi") {
+    group = "openapi"
+    description = "Validates the Graffiti OpenAPI specification."
+    inputSpec.set(layout.projectDirectory.file(openApiInputSpec).asFile.absolutePath)
+}
+
+val generateGraffitiApi = tasks.register<GenerateTask>("generateGraffitiApi") {
+    group = "openapi"
+    description = "Generates Graffiti Spring MVC interfaces and DTOs."
+    dependsOn(validateGraffitiApi)
+
+    generatorName.set(requiredProjectProperty("openApi.generatorName"))
+    inputSpec.set(layout.projectDirectory.file(openApiInputSpec).asFile.absolutePath)
+    outputDir.set(generatedOpenApiRoot)
+    apiPackage.set(requiredProjectProperty("openApi.apiPackage"))
+    modelPackage.set(requiredProjectProperty("openApi.modelPackage"))
+    configOptions.set(openApiConfigOptions)
+    globalProperties.set(openApiGlobalProperties)
+    cleanupOutput.set(booleanProjectProperty("openApi.cleanupOutput"))
+
+    generateApiTests.set(booleanProjectProperty("openApi.generateApiTests"))
+    generateModelTests.set(booleanProjectProperty("openApi.generateModelTests"))
+    generateApiDocumentation.set(
+        booleanProjectProperty("openApi.generateApiDocumentation")
+    )
+    generateModelDocumentation.set(
+        booleanProjectProperty("openApi.generateModelDocumentation")
+    )
+}
+
+tasks.named("compileKotlin") {
+    dependsOn(generateGraffitiApi)
 }
