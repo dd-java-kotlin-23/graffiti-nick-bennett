@@ -73,6 +73,8 @@ dependencies {
     implementation(libs.spring.boot.oauth2.resource.server)
 //    testImplementation("org.springframework.security:spring-security-test")
 
+    implementation(libs.jspecify)
+
     developmentOnly(libs.spring.boot.devtools)
 
     runtimeOnly(libs.h2)

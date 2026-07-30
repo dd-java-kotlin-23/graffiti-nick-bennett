@@ -1,10 +1,20 @@
 package edu.cnm.deepdive.graffiti.model.entity
 
-import jakarta.persistence.*
-import org.hibernate.annotations.CreationTimestamp
+import jakarta.persistence.CascadeType
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.FetchType
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
+import jakarta.persistence.Id
+import jakarta.persistence.OneToMany
+import jakarta.persistence.OrderBy
+import jakarta.persistence.PrePersist
+import jakarta.persistence.Table
 import java.time.Instant
-import java.util.*
+import java.util.UUID
 import org.hibernate.Hibernate
+import org.hibernate.annotations.CreationTimestamp
 
 @Entity
 @Table(name = "user_profile")
@@ -26,6 +36,10 @@ class User(
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     var created: Instant? = null,
+
+    @OneToMany(mappedBy = "owner", fetch = FetchType.LAZY, cascade = [CascadeType.ALL], orphanRemoval = true)
+    @OrderBy("created DESC")
+    val ownedCanvases: MutableList<Canvas> = mutableListOf(),
 ) {
 
     override fun equals(other: Any?): Boolean =

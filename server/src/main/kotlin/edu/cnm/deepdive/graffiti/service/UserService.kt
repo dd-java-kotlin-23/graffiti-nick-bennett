@@ -1,18 +1,22 @@
 package edu.cnm.deepdive.graffiti.service
 
+import edu.cnm.deepdive.graffiti.model.dto.PrivateUserProfileDto
+import edu.cnm.deepdive.graffiti.model.dto.PublicUserProfileDto
+import edu.cnm.deepdive.graffiti.model.dto.UserProfileUpdateDto
 import edu.cnm.deepdive.graffiti.model.entity.User
-import java.util.UUID
 
 interface UserService {
 
     val currentUser: User
 
-    val allUsers: List<User>
+    val userProfile: PrivateUserProfileDto
 
-    fun getUser(externalId: UUID): User
+    val allUsers: List<PublicUserProfileDto>
+
+    fun getUser(externalId: String): PublicUserProfileDto
 
     fun getOrAddUser(user: User): User
 
-    fun updateMe(changes: User): User
+    fun updateMe(changes: UserProfileUpdateDto): PrivateUserProfileDto
 
 }
