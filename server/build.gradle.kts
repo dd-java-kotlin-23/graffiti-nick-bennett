@@ -36,10 +36,10 @@ val openApiSourceFolder = requiredProjectProperty("openApi.sourceFolder")
 val openApiConfigPrefix = "openApi.config."
 val openApiGlobalPrefix = "openApi.global."
 val openApiConfigOptions =
-    indexedProjectProperties("openApi.configOptions", openApiConfigPrefix)
+    projectPropertiesWithPrefix(openApiConfigPrefix)
         .plus("sourceFolder" to openApiSourceFolder)
 val openApiGlobalProperties =
-    indexedProjectProperties("openApi.globalProperties", openApiGlobalPrefix)
+    projectPropertiesWithPrefix(openApiGlobalPrefix)
 val generatedOpenApiRoot = layout.buildDirectory.dir(openApiOutputDirectory)
 val generatedOpenApiKotlin = generatedOpenApiRoot.map { it.dir(openApiSourceFolder) }
 
@@ -128,10 +128,8 @@ fun requiredProjectProperty(name: String): String =
 fun booleanProjectProperty(name: String): Boolean =
     requiredProjectProperty(name).toBooleanStrict()
 
-fun indexedProjectProperties(indexName: String, prefix: String): Map<String, String> =
-    requiredProjectProperty(indexName)
-        .split(',')
-        .map(String::trim)
-        .filter(String::isNotEmpty)
-        .associateWith { requiredProjectProperty("$prefix$it") }
-
+fun projectPropertiesWithPrefix(prefix: String): Map<String, String> =
+    project.properties
+        .filterKeys { it.startsWith(prefix) }
+        .mapKeys { (name, _) -> name.removePrefix(prefix) }
+        .mapValues { (_, value) -> value.toString() }
