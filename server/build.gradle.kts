@@ -102,6 +102,7 @@ val generateGraffitiApi = tasks.register<GenerateTask>("generateGraffitiApi") {
     outputDir.set(generatedOpenApiRoot)
     apiPackage.set(requiredProjectProperty("openApi.apiPackage"))
     modelPackage.set(requiredProjectProperty("openApi.modelPackage"))
+    modelNameSuffix.set(requiredProjectProperty("openApi.modelNameSuffix"))
     configOptions.set(openApiConfigOptions)
     globalProperties.set(openApiGlobalProperties)
     cleanupOutput.set(booleanProjectProperty("openApi.cleanupOutput"))
@@ -129,6 +130,7 @@ fun booleanProjectProperty(name: String): Boolean =
     requiredProjectProperty(name).toBooleanStrict()
 
 fun projectPropertiesWithPrefix(prefix: String): Map<String, String> =
+    @Suppress("DEPRECATION")
     project.properties
         .filterKeys { it.startsWith(prefix) }
         .mapKeys { (name, _) -> name.removePrefix(prefix) }
